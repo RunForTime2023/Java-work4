@@ -1,0 +1,30 @@
+server:
+  port: 10001
+spring:
+  datasource:
+    username: root
+    password: 124578Ch!
+    url: jdbc:mysql://localhost:3306/website?useSSL=true&useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 5GB
+      enabled: true
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    org.springframework.security: info
+
+temp:
+  jwt:
+    header: "Authorization"
+    secret: "2ieOk3RsjWq7DpNdVfE0BQc9mA6ME81Yu4IRJdjdieksnzkkew33EIW"
