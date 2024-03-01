@@ -40,6 +40,11 @@ public class Controller {
     private JwtDTO jwtDTO;
     private List<String> deleteList;
 
+    @RequestMapping("/docker")
+    public String link() {
+        return "Docker Test Success!";
+    }
+
     /**
      * 注册用户
      * @param username

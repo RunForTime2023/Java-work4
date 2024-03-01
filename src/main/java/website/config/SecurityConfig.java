@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .failureHandler(new MyAuthenticationFailureHandler())
         );
         httpSecurity.authorizeHttpRequests((authorize) -> authorize
-                .requestMatchers("/user/register", "/user/login").permitAll()
+                .requestMatchers("/user/register", "/user/login","/docker").permitAll()
                 .anyRequest().authenticated()
         );
         httpSecurity.csrf((csrf) -> csrf.disable());

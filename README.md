@@ -1,6 +1,6 @@
 # 完成进度
 
-按照接口文档完成17个接口的功能，其中登录功能由于使用安全框架配置，故未在Controller中显式声明接口。部分接口的正确性有待验证。Dockerfile暂未编写，项目暂未部署。
+按照接口文档完成17个接口的功能，其中登录功能由于使用安全框架配置，故未在Controller中显式声明接口。
 
 # 目录树
 
@@ -22,6 +22,8 @@
 │      └─java
 │          └─website
 │              └─ApplicationTests.java   //测试文件（没用）
+│
+├─Dockerfile                             //Docker构建文件
 └─pom.xml                                //Maven依赖配置
 ```
 
