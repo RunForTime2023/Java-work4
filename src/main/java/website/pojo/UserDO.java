@@ -62,7 +62,7 @@ public class UserDO {
     }
 
     public void setAvatarUrl() {
-        this.avatarUrl = "C:\\非系统文件\\待删除文件\\西二在线\\Java work4\\pic\\user\\" + this.id.toString() + ".jpg";
+        this.avatarUrl = "/pic/user/" + this.id.toString() + ".jpg";
     }
 
     public LocalDateTime getCreatedAt() {
@@ -110,6 +110,10 @@ public class UserDO {
                 '}';
     }
 
+    /**
+     * 类型转换，转为/follow及其子页面输出的类型
+     * @return
+     */
     public FollowVO turnType1() {
         FollowVO result=new FollowVO(id,username,avatarUrl);
         return result;

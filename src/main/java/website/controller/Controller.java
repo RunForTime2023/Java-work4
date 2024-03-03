@@ -40,11 +40,6 @@ public class Controller {
     private JwtDTO jwtDTO;
     private List<String> deleteList;
 
-    @RequestMapping("/docker")
-    public String link() {
-        return "Docker Test Success!";
-    }
-
     /**
      * 注册用户
      * @param username
@@ -91,6 +86,7 @@ public class Controller {
 
     /**
      * 上传或修改头像
+     * @param token 当前登录用户的JWT token，下同
      * @param file 头像图片
      * @return
      */
@@ -103,21 +99,22 @@ public class Controller {
                 UserDO user = userMapper.selectById(jwtDTO.getUserId(token));
                 user.setAvatarUrl();
                 user.setUpdatedAt();
-                userMapper.updateById(user);
                 File file1=new File(user.getAvatarUrl());
+                file1 = new File(file1.getAbsolutePath());
                 if(!file1.exists()) {
                     file1.createNewFile();
                 }
                 file.transferTo(file1);
                 BufferedImage image = ImageIO.read(file1);
                 if (image == null) {
-                    throw new Exception();
+                    throw new Exception("图片文件为空");
                 } else {
                     ImageIO.write(image, "jpg", file1);
+                    userMapper.updateById(user);
                     result.addAttribute("status", new StatusDTO(1, "success"));
                 }
             } else {
-                throw new Exception();
+                throw new Exception("不是图片");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -366,7 +363,7 @@ public class Controller {
 
     /**
      * 用户上传视频
-     * @param token       当前登录用户的JWT token
+     * @param token
      * @param file
      * @param title
      * @param description
@@ -382,7 +379,10 @@ public class Controller {
             video.setVideoUrl();
             video.setCoverUrl();
             File file1 = new File(video.getVideoUrl());
-            file1.createNewFile();
+            file1 = new File(file1.getAbsolutePath());
+            if(!file1.exists()) {
+                file1.createNewFile();
+            }
             file.transferTo(file1);
             Tika tika = new Tika();
             MediaType mediaType = MediaType.parse(tika.detect(file1));
@@ -394,7 +394,7 @@ public class Controller {
                 if (frame == null) {
                     videoMapper.deleteById(video.getId());
                     file1.deleteOnExit();
-                    throw new Exception("视频为空");
+                    throw new Exception("视频文件为空");
                 }
                 // 转换为Java 2D图像，然后保存封面
                 Java2DFrameConverter converter = new Java2DFrameConverter();
@@ -407,7 +407,8 @@ public class Controller {
                 redisTemplate.opsForZSet().add("rank", video.getId(), video.getVisitCount());
                 result.addAttribute("status", new StatusDTO(1, "success"));
             } else {
-                videoMapper.deleteById(jwtDTO.getUserId(token));
+                videoMapper.deleteById(video.getId());
+                file1.deleteOnExit();
                 throw new Exception("文件格式有误");
             }
         } catch (Exception ex) {

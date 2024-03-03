@@ -24,7 +24,8 @@
 │              └─ApplicationTests.java   //测试文件（没用）
 │
 ├─Dockerfile                             //Docker构建文件
-└─pom.xml                                //Maven依赖配置
+├─pom.xml                                //Maven依赖配置
+└─user-0.0.1-SNAPSHOT.jar                //Maven打包后生成的jar包
 ```
 
 # 缺陷

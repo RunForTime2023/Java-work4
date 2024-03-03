@@ -53,7 +53,7 @@ public class VideoDO {
     }
 
     public void setVideoUrl() {
-        this.videoUrl = "C:\\非系统文件\\待删除文件\\西二在线\\Java work4\\video\\" + this.id.toString() + ".mp4";
+        this.videoUrl = "/video/" + this.id.toString() + ".mp4";
     }
 
     public void setVideoUrl(String videoUrl) {
@@ -69,7 +69,7 @@ public class VideoDO {
     }
 
     public void setCoverUrl() {
-        this.coverUrl = "C:\\非系统文件\\待删除文件\\西二在线\\Java work4\\pic\\cover\\" + this.id.toString() + ".jpg";
+        this.coverUrl = "/pic/cover/" + this.id.toString() + ".jpg";
     }
 
     public String getTitle() {
