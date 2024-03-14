@@ -3,12 +3,15 @@ package website.pojo;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
 @TableName("`commentlist`")
+@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 public class CommentDO {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

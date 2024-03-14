@@ -9,6 +9,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
@@ -35,15 +36,16 @@ public class Controller {
     @Autowired
     private LikeMapper likeMapper;
     @Autowired
-    private RedisTemplate<String,String> redisTemplate;
+    private RedisTemplate<String, String> redisTemplate;
     @Autowired
     private JwtDTO jwtDTO;
     private List<String> deleteList;
 
     /**
-     * 注册用户
-     * @param username
-     * @param password
+     * 注册
+     *
+     * @param username 账号
+     * @param password 密码
      * @return
      */
     @PostMapping("/user/register")
@@ -54,54 +56,56 @@ public class Controller {
             QueryWrapper<UserDO> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("username", username);
             List<UserDO> userList = userMapper.selectList(queryWrapper);
-            System.out.println(userList);
             if (userList.isEmpty()) {
-                UserDO user = new UserDO(username, password);
+                BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+                UserDO user = new UserDO(username, encoder.encode(password));
                 userMapper.insert(user);
                 result.addAttribute("status", new StatusDTO(1, "success"));
             } else {
-                result.addAttribute("status", new StatusDTO(-1, "用户名已存在"));
+                result.addAttribute("status", new StatusDTO(-2, "用户名已存在"));
             }
         } else {
-            result.addAttribute("status", new StatusDTO(-2, "用户名或密码为空"));
+            result.addAttribute("status", new StatusDTO(-3, "用户名或密码为空"));
         }
         return result;
     }
 
     /**
-     * 获取用户详细信息
-     * @param userId
+     * 用户信息
+     *
+     * @param userId 用户ID
      * @return
      */
     @GetMapping("/user/info")
     public ModelMap getUserInfo(@RequestParam("user_id") String userId) {
         QueryWrapper<UserDO> queryWrapper = new QueryWrapper<>();
-        ModelMap model = new ModelMap();
+        ModelMap result = new ModelMap();
         queryWrapper.eq("id", userId).select("id", "username", "avatar_url", "created_at", "updated_at", "deleted_at");
         UserInfoVO userDetail = userMapper.selectOne(queryWrapper).turnType2();
-        model.addAttribute("status", new StatusDTO(1, "success"));
-        model.addAttribute("data", userDetail);
-        return model;
+        result.addAttribute("status", new StatusDTO(1, "success"));
+        result.addAttribute("data", userDetail);
+        return result;
     }
 
     /**
-     * 上传或修改头像
+     * 上传头像
+     *
      * @param token 当前登录用户的JWT token，下同
-     * @param file 头像图片
+     * @param file  文件
      * @return
      */
-    @RequestMapping("/user/avatar/upload")
+    @PutMapping("/user/avatar/upload")
     @Transactional
     public ModelMap saveUserPic(@RequestHeader("Access-Token") String token, @RequestParam("data") MultipartFile file) {
         ModelMap result = new ModelMap();
         try {
-            if(file.getContentType()!=null&&file.getContentType().startsWith("image/")) {
+            if (file.getContentType() != null && file.getContentType().startsWith("image/")) {
                 UserDO user = userMapper.selectById(jwtDTO.getUserId(token));
                 user.setAvatarUrl();
                 user.setUpdatedAt();
-                File file1=new File(user.getAvatarUrl());
+                File file1 = new File(user.getAvatarUrl());
                 file1 = new File(file1.getAbsolutePath());
-                if(!file1.exists()) {
+                if (!file1.exists()) {
                     file1.createNewFile();
                 }
                 file.transferTo(file1);
@@ -118,15 +122,16 @@ public class Controller {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            result.addAttribute("status", new StatusDTO(-1, "图片上传失败，可能是格式有误或已损坏。"));
+            result.addAttribute("status", new StatusDTO(-5, "图片上传失败，可能是格式有误或已损坏。"));
         }
         return result;
     }
 
     /**
-     * 用户关注/取消关注操作
+     * 关注/取消关注
+     *
      * @param toUserId
-     * @param isFollowed
+     * @param isFollowed 操作，0表示关注，1表示取消关注
      * @return
      */
     @PostMapping("/relation/action")
@@ -144,18 +149,19 @@ public class Controller {
             followMapper.delete(queryWrapper);
             result.addAttribute("status", new StatusDTO(1, "success"));
         } else {
-            result.addAttribute("status", new StatusDTO(-1, "error"));
+            result.addAttribute("status", new StatusDTO(-9, "unknown error"));
         }
         return result;
     }
 
     /**
-     * 获取指定用户关注的人的列表
+     * 关注列表
+     *
      * @param userId
      * @return
      */
     @GetMapping("/following/list")
-    public ModelMap listFollowing(@RequestParam("userId") String userId) {
+    public ModelMap listFollowing(@RequestParam("user_id") String userId) {
         ModelMap result = new ModelMap();
         QueryWrapper<FollowDO> followQueryWrapper = new QueryWrapper<>();
         followQueryWrapper.eq("following_id", userId);
@@ -167,7 +173,7 @@ public class Controller {
             FollowVO userDetail = userMapper.selectOne(userQueryWrapper).turnType1();
             userDetailList.add(userDetail);
         }
-        Map<String, Object> map = new HashMap<>();
+        LinkedHashMap<String, Object> map = new LinkedHashMap<>();
         map.put("items", userDetailList);
         map.put("total", userDetailList.size());
         result.addAttribute("status", new StatusDTO(1, "success"));
@@ -176,7 +182,8 @@ public class Controller {
     }
 
     /**
-     * 获取指定用户的粉丝列表
+     * 粉丝列表
+     *
      * @param userId
      * @return
      */
@@ -193,7 +200,7 @@ public class Controller {
             FollowVO userDetail = userMapper.selectOne(userQueryWrapper).turnType1();
             userDetailList.add(userDetail);
         }
-        Map<String, Object> map = new HashMap<>();
+        LinkedHashMap<String, Object> map = new LinkedHashMap<>();
         map.put("items", userDetailList);
         map.put("total", userDetailList.size());
         result.addAttribute("status", new StatusDTO(1, "success"));
@@ -202,8 +209,9 @@ public class Controller {
     }
 
     /**
-     * 给出当前登录用户的朋友列表
-     * @param token
+     * 好友列表
+     *
+     * @param token 当前登录用户的JWT token
      * @return
      */
     @GetMapping("/friends/list")
@@ -225,7 +233,7 @@ public class Controller {
                 }
             }
         }
-        Map<String, Object> map = new HashMap<>();
+        LinkedHashMap<String, Object> map = new LinkedHashMap<>();
         map.put("items", friendList);
         map.put("total", friendList.size());
         result.addAttribute("status", new StatusDTO(1, "success"));
@@ -234,17 +242,18 @@ public class Controller {
     }
 
     /**
-     * 保存当前登录用户对视频或某条评论的评论
+     * 评论
+     *
      * @param token
      * @param videoId
-     * @param commentId
-     * @param content
+     * @param commentId 针对的评论ID
+     * @param content   评论正文
      * @return
      */
     @PostMapping("/comment/publish")
     @Transactional
     public ModelMap saveComment(@RequestHeader("Access-Token") String token, @RequestParam(value = "video_id", required = false) String videoId, @RequestParam(value = "comment_id", required = false) String commentId, @RequestParam("content") String content) {
-        if (videoId == null) {
+        if (videoId == null || videoId.isEmpty()) {
             //父评论的子评论数+1
             CommentDO comment1 = commentMapper.selectById(commentId);
             comment1.setChildCount(comment1.getChildCount() + 1);
@@ -256,9 +265,9 @@ public class Controller {
             //添加新评论
             CommentDO comment2 = new CommentDO(jwtDTO.getUserId(token), comment1.getVideoId(), commentId, content);
             commentMapper.insert(comment2);
-        } else if (commentId == null) {
+        } else if (commentId == null || commentId.isEmpty()) {
             //视频的评论总数+1
-            VideoDO video = videoMapper.selectById(commentId);
+            VideoDO video = videoMapper.selectById(videoId);
             video.setCommentCount(video.getCommentCount() + 1);
             videoMapper.updateById(video);
             CommentDO comment = new CommentDO(jwtDTO.getUserId(token), videoId, "0", content);
@@ -273,15 +282,16 @@ public class Controller {
     }
 
     /**
-     * 获取某条评论（不包含子评论）
+     * 获取评论（不含子评论）
+     *
      * @param commentId
      * @return
      */
     @GetMapping("/comment/list")
-    public ModelMap listComment(@RequestParam("comment_id") String commentId) {
+    public ModelMap getComment(@RequestParam("comment_id") String commentId) {
         ModelMap result = new ModelMap();
         CommentDO comment = commentMapper.selectById(commentId);
-        Map<String, Object> map = new HashMap<>();
+        LinkedHashMap<String, Object> map = new LinkedHashMap<>();
         map.put("items", comment);
         result.addAttribute("status", new StatusDTO(1, "success"));
         result.addAttribute("data", map);
@@ -290,6 +300,7 @@ public class Controller {
 
     /**
      * 删除评论
+     *
      * @param commentId
      * @return
      */
@@ -310,7 +321,8 @@ public class Controller {
     }
 
     /**
-     * 用户给视频或评论点赞
+     * 点赞
+     *
      * @param videoId
      * @param commentId
      * @return
@@ -318,28 +330,43 @@ public class Controller {
     @PostMapping("/like/action")
     @Transactional
     public ModelMap saveLike(@RequestHeader("Access-Token") String token, @RequestParam(value = "video_id", required = false) String videoId, @RequestParam(value = "comment_id", required = false) String commentId) {
-        if (videoId == null) {
-            CommentDO comment = commentMapper.selectById(commentId);
-            comment.setLikeCount();
-            comment.setUpdatedAt();
-            commentMapper.updateById(comment);
-            LikeDO like = new LikeDO(jwtDTO.getUserId(token), null, commentId);
-            likeMapper.insert(like);
-        } else {
-            VideoDO video = videoMapper.selectById(videoId);
-            video.setLikeCount();
-            video.setUpdatedAt();
-            videoMapper.updateById(video);
-            LikeDO like = new LikeDO(jwtDTO.getUserId(token), videoId);
-            likeMapper.insert(like);
-        }
         ModelMap result = new ModelMap();
-        result.addAttribute("status", new StatusDTO(1, "success"));
+        QueryWrapper<LikeDO> queryWrapper = new QueryWrapper<>();
+        if (videoId == null || videoId.isEmpty()) {
+            queryWrapper.eq("user_id", jwtDTO.getUserId(token)).eq("comment_id", commentId);
+            LikeDO like = likeMapper.selectOne(queryWrapper);
+            if (like == null) {
+                CommentDO comment = commentMapper.selectById(commentId);
+                comment.setLikeCount();
+                comment.setUpdatedAt();
+                commentMapper.updateById(comment);
+                like = new LikeDO(jwtDTO.getUserId(token), null, commentId);
+                likeMapper.insert(like);
+                result.addAttribute("status", new StatusDTO(1, "success"));
+            } else {
+                result.addAttribute("status", new StatusDTO(-6, "不可重复点赞"));
+            }
+        } else if (commentId == null || commentId.isEmpty()) {
+            queryWrapper.eq("user_id", jwtDTO.getUserId(token)).eq("video_id", videoId);
+            LikeDO like = likeMapper.selectOne(queryWrapper);
+            if (like == null) {
+                VideoDO video = videoMapper.selectById(videoId);
+                video.setLikeCount();
+                video.setUpdatedAt();
+                videoMapper.updateById(video);
+                like = new LikeDO(jwtDTO.getUserId(token), videoId);
+                likeMapper.insert(like);
+                result.addAttribute("status", new StatusDTO(1, "success"));
+            } else {
+                result.addAttribute("status", new StatusDTO(-8, "不可重复点赞"));
+            }
+        }
         return result;
     }
 
     /**
-     * 指定用户点赞的视频列表
+     * 点赞列表
+     *
      * @param userId
      * @return
      */
@@ -362,11 +389,12 @@ public class Controller {
     }
 
     /**
-     * 用户上传视频
+     * 投稿
+     *
      * @param token
-     * @param file
-     * @param title
-     * @param description
+     * @param file 视频文件
+     * @param title 视频标题
+     * @param description 视频简介
      * @return
      */
     @PostMapping("/video/publish")
@@ -380,7 +408,7 @@ public class Controller {
             video.setCoverUrl();
             File file1 = new File(video.getVideoUrl());
             file1 = new File(file1.getAbsolutePath());
-            if(!file1.exists()) {
+            if (!file1.exists()) {
                 file1.createNewFile();
             }
             file.transferTo(file1);
@@ -413,16 +441,17 @@ public class Controller {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            result.addAttribute("status", new StatusDTO(-1, "视频上传失败，可能是格式错误或已损坏"));
+            result.addAttribute("status", new StatusDTO(-7, "视频上传失败，可能是格式错误或已损坏"));
         }
         return result;
     }
 
     /**
-     * 展示指定用户的投稿，并指定一页展示的视频数量及第几页。
+     * 投稿列表
+     *
      * @param userId
-     * @param pageNum
-     * @param pageSize
+     * @param pageNum  页面尺寸
+     * @param pageSize 页码
      * @return
      */
     @GetMapping("/video/list")
@@ -442,26 +471,27 @@ public class Controller {
                 tempList.clear();
             }
         }
-        if (tempPage > pageNum || tempPage == pageNum && tempList.size() > 0) {
+        if (tempPage > pageNum || tempPage == pageNum && !tempList.isEmpty()) {
             tempModel.addAttribute("items", tempList);
             tempModel.addAttribute("total", videoList.size());
             result.addAttribute("status", new StatusDTO(1, "success"));
             result.addAttribute("data", tempModel);
         } else {
-            result.addAttribute("status", new StatusDTO(-1, "页码错误"));
+            result.addAttribute("status", new StatusDTO(-8, "页码错误"));
         }
         return result;
     }
 
     /**
-     * 给出视频的热门排行榜
+     * 热门排行榜
+     *
      * @return
      */
     @GetMapping("/video/popular")
     public ModelMap listPopular() {
         Set<String> popular = redisTemplate.opsForZSet().reverseRange("rank", 0, -1);
         List<VideoDO> videoList = new ArrayList<>();
-        for(String each: popular) {
+        for (String each : popular) {
             videoList.add(videoMapper.selectById(each));
         }
         ModelMap result = new ModelMap(), temp = new ModelMap();
@@ -472,10 +502,11 @@ public class Controller {
     }
 
     /**
-     * 提供关键词以搜索视频，搜索记录用Redis保存
-     * @param keywords
-     * @param pageSize
-     * @param pageNum
+     * 搜索视频（搜索记录用Redis保存）
+     *
+     * @param keywords 关键词
+     * @param pageSize 页面尺寸
+     * @param pageNum  页码（从0开始）
      * @return
      */
     @PostMapping("/video/search")
@@ -496,7 +527,7 @@ public class Controller {
                 tempList.clear();
             }
         }
-        if (tempPage > pageNum || tempPage == pageNum && tempList.size() > 0) {
+        if (tempPage > pageNum || tempPage == pageNum && !tempList.isEmpty()) {
             tempModel.addAttribute("items", tempList);
             tempModel.addAttribute("total", videoList.size());
             result.addAttribute("status", new StatusDTO(1, "success"));
@@ -506,9 +537,9 @@ public class Controller {
 //            redisTemplate.opsForList().remove("HistorySearch", 0, keywords);
 //            redisTemplate.opsForList().leftPush("HistorySearch", keywords);
 //            redisTemplate.exec();
-            redisTemplate.execute(new SessionCallback<Object>(){
+            redisTemplate.execute(new SessionCallback<>() {
                 @Override
-                public Object execute(RedisOperations redisOperations) throws DataAccessException{
+                public Object execute(RedisOperations redisOperations) throws DataAccessException {
                     redisTemplate.multi();
                     redisTemplate.opsForList().remove("HistorySearch", 0, keywords);
                     redisTemplate.opsForList().leftPush("HistorySearch", keywords);
@@ -516,13 +547,14 @@ public class Controller {
                 }
             });
         } else {
-            result.addAttribute("status", new StatusDTO(-1, "页码错误"));
+            result.addAttribute("status", new StatusDTO(-8, "页码错误"));
         }
         return result;
     }
 
     /**
      * 递归删除子评论
+     *
      * @param parentId 当前父评论ID
      */
     public void count(String parentId) {

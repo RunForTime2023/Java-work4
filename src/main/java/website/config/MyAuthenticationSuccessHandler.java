@@ -16,7 +16,7 @@ import website.pojo.UserDO;
 import website.pojo.JwtDTO;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 @Component
 public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
@@ -31,11 +31,11 @@ public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHand
         QueryWrapper<UserDO> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", temp.getUsername());
         UserDO user = userMapper.selectOne(queryWrapper);
-        user.setUpdatedAt();
-        String token = jwtDTO.createToken(user.getId(),user.getUsername());
+        String token = jwtDTO.createToken(user.getId(), user.getUsername());
         response.setHeader("Authorization", "Bearer" + token);
-        HashMap<String, Object> result = new HashMap<>();
+        LinkedHashMap<String, Object> result = new LinkedHashMap<>();
         result.put("status", new StatusDTO(1, "success"));
+        result.put("data", user.turnType2());
         result.put("token", token);
         response.setCharacterEncoding("utf-8");
         response.setContentType("application/json;charset=utf-8");

@@ -1,6 +1,5 @@
 package website.pojo;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.http.HttpServletRequest;
@@ -69,23 +68,6 @@ public class JwtDTO {
             ex.printStackTrace();
             return "";
         }
-    }
-
-    /**
-     * 核验token是否合法
-     * @param request
-     * @return
-     */
-    public boolean isTokenVaild(HttpServletRequest request) {
-        try {
-            String token = request.getHeader(header);
-            if (StringUtils.isEmpty(token)) return false;
-            Jwts.parser().setSigningKey(secret).parseClaimsJwt(token);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return false;
-        }
-        return true;
     }
 
     /**

@@ -1,5 +1,12 @@
 package website.pojo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -10,12 +17,22 @@ import java.time.LocalDateTime;
  */
 @Data
 @AllArgsConstructor
+@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 public class UserInfoVO {
     private String id;
     private String username;
     private String avatarUrl;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime createdAt;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime updatedAt;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime deletedAt;
 
     public String getId() {
@@ -43,7 +60,7 @@ public class UserInfoVO {
     }
 
     public void setAvatarUrl() {
-        this.avatarUrl = "/user/avatar/" + this.id.toString() + ".jpg";
+        this.avatarUrl = "/pic/user/" + this.id.toString() + ".jpg";
     }
 
     public LocalDateTime getCreatedAt() {
@@ -76,17 +93,5 @@ public class UserInfoVO {
 
     public void setDeletedAt() {
         this.deletedAt = LocalDateTime.now();
-    }
-
-    @Override
-    public String toString() {
-        return "UserDO{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", avatarUrl='" + avatarUrl + '\'' +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
-                ", deletedAt=" + deletedAt +
-                '}';
     }
 }

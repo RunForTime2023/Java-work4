@@ -112,19 +112,21 @@ public class UserDO {
 
     /**
      * 类型转换，转为/follow及其子页面输出的类型
+     *
      * @return
      */
     public FollowVO turnType1() {
-        FollowVO result=new FollowVO(id,username,avatarUrl);
+        FollowVO result = new FollowVO(id, username, avatarUrl);
         return result;
     }
 
     /**
      * 类型转换，转为/user/info页面输出的类型
+     *
      * @return
      */
     public UserInfoVO turnType2() {
-        UserInfoVO result=new UserInfoVO(id,username,avatarUrl,createdAt,updatedAt,deletedAt);
+        UserInfoVO result = new UserInfoVO(id, username, avatarUrl, createdAt, updatedAt, deletedAt);
         return result;
     }
 }

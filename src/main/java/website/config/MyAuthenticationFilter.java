@@ -27,7 +27,6 @@ public class MyAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authToken = request.getHeader(jwtDTO.getHeader());
         String username = jwtDTO.getUsername(request);
-        System.out.println(username);
         // 当token中的username不为空时进行验证token是否是有效的token
         if (!username.equals("") && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = detailsService.loadUserByUsername(username);

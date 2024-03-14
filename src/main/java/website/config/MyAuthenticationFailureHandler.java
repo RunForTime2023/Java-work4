@@ -15,7 +15,7 @@ public class MyAuthenticationFailureHandler implements AuthenticationFailureHand
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
         HashMap<String, Object> result = new HashMap<>();
-        result.put("status", new StatusDTO(-1, "用户名或密码错误"));
+        result.put("status", new StatusDTO(-4, "用户名或密码错误"));
         response.setCharacterEncoding("utf-8");
         response.setContentType("application/json;charset=utf-8");
         response.getWriter().println(new ObjectMapper().writeValueAsString(result));

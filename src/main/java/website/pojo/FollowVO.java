@@ -1,5 +1,6 @@
 package website.pojo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 
 /**
@@ -9,6 +10,7 @@ import lombok.AllArgsConstructor;
 public class FollowVO {
     private String id;
     private String username;
+    @JsonProperty(value = "avatar_url")
     private String avatarUrl;
 
     public String getId() {
